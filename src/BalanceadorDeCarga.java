@@ -1,4 +1,3 @@
-// Balanceador de Carga (Servidor) - MÁQUINA 1
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -19,19 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Recebe pedidos de multiplicação (A x B) dos clientes, divide as linhas de A em
- * tarefas e distribui entre os trabalhadores conectados. Junta os pedaços de C e
- * devolve o resultado ao cliente.
- *
- * Balanceamento: todas as tarefas vão para uma fila única; cada trabalhador pega a
- * próxima assim que termina a anterior. Máquinas mais rápidas pegam mais tarefas.
- * Se um trabalhador cair no meio, a tarefa dele volta para a fila. Trabalhadores
- * novos (ex.: uma 4ª máquina) podem entrar a qualquer momento.
- */
 public class BalanceadorDeCarga {
 
-    /** Quantas tarefas criar por trabalhador conectado (mais tarefas = balanceamento mais fino). */
     private static final int TAREFAS_POR_TRABALHADOR = 4;
 
     private final int porta;
@@ -76,14 +64,13 @@ public class BalanceadorDeCarga {
         }
     }
 
-    /** Primeira mensagem de toda conexão diz quem está conectando. */
     private void atender(Socket socket) {
         try {
             socket.setTcpNoDelay(true);
             DataInputStream in = Protocolo.entrada(socket);
             DataOutputStream out = Protocolo.saida(socket);
 
-            socket.setSoTimeout(10_000); // não ficar preso a conexões que não falam o protocolo
+            socket.setSoTimeout(10_000);
             String papel = in.readUTF();
             if (Protocolo.PAPEL_TRABALHADOR.equals(papel)) {
                 String nome = in.readUTF();
@@ -102,18 +89,14 @@ public class BalanceadorDeCarga {
             try {
                 socket.close();
             } catch (IOException ignorada) {
-                // já fechado
             }
         }
     }
-
-    // ---------------------------------------------------------------------- cliente
 
     private void atenderCliente(Socket socket, DataInputStream in, DataOutputStream out) throws IOException {
         String origem = socket.getInetAddress().getHostAddress();
         Terminal.log("Cliente conectado: " + origem);
 
-        // Recebe as matrizes do cliente
         double[][] a = Protocolo.lerMatriz(in);
         double[][] b = Protocolo.lerMatriz(in);
         Terminal.log("Cliente " + origem + " enviou A[" + Matrizes.dimensao(a) + "] x B[" + Matrizes.dimensao(b) + "]");
@@ -130,7 +113,6 @@ public class BalanceadorDeCarga {
             return;
         }
 
-        // Divide em tarefas e distribui (os trabalhadores consomem a fila)
         Job job = new Job(proximoIdJob.getAndIncrement(), a, b, trabalhadores.size());
         Terminal.log("Job #" + job.id + ": " + a.length + " linhas divididas em " + job.tarefas.size()
                 + " tarefas para " + trabalhadores.size() + " trabalhador(es).");
@@ -146,15 +128,14 @@ public class BalanceadorDeCarga {
         }
         long ms = (System.nanoTime() - inicio) / 1_000_000;
 
-        // Envia o resultado de volta ao cliente
         out.writeByte(Protocolo.OK);
         Protocolo.escreverMatriz(out, job.c);
         out.writeLong(ms);
         out.writeInt(job.porTrabalhador.size());
         for (Map.Entry<String, int[]> e : job.porTrabalhador.entrySet()) {
             out.writeUTF(e.getKey());
-            out.writeInt(e.getValue()[0]); // linhas
-            out.writeInt(e.getValue()[1]); // tarefas
+            out.writeInt(e.getValue()[0]);
+            out.writeInt(e.getValue()[1]);
         }
         out.flush();
         Terminal.log("Job #" + job.id + " concluído em " + ms + " ms. Resultado C[" + Matrizes.dimensao(job.c)
@@ -172,16 +153,12 @@ public class BalanceadorDeCarga {
         return null;
     }
 
-    // ------------------------------------------------------------------ trabalhador
-
-    /** Uma thread por trabalhador: pega tarefas da fila, envia, espera o resultado. */
     private final class ConexaoTrabalhador {
         private final int id;
         private final String rotulo;
         private final Socket socket;
         private final DataInputStream in;
         private final DataOutputStream out;
-        /** Último job cuja matriz B já foi enviada a este trabalhador (evita reenviar B a cada tarefa). */
         private long jobComBEnviada = -1;
 
         ConexaoTrabalhador(Socket socket, DataInputStream in, DataOutputStream out, String nome, int nucleos) {
@@ -200,7 +177,7 @@ public class BalanceadorDeCarga {
                 while (true) {
                     Tarefa t = fila.pollFirst(5, TimeUnit.SECONDS);
                     if (t == null) {
-                        verificarConexao(); // ocioso: confirma que o trabalhador continua vivo
+                        verificarConexao();
                         continue;
                     }
                     try {
@@ -266,16 +243,12 @@ public class BalanceadorDeCarga {
         }
     }
 
-    // ------------------------------------------------------------- job e tarefas
-
-    /** Um pedido de multiplicação de um cliente. */
     private static final class Job {
         final long id;
         final double[][] b;
         final double[][] c;
         final List<Tarefa> tarefas = new ArrayList<>();
         final CountDownLatch pendentes;
-        /** trabalhador -> {linhas calculadas, tarefas feitas} */
         final Map<String, int[]> porTrabalhador = new LinkedHashMap<>();
 
         Job(long id, double[][] a, double[][] b, int nTrabalhadores) {
@@ -305,7 +278,6 @@ public class BalanceadorDeCarga {
         }
     }
 
-    /** Um bloco de linhas consecutivas de A. */
     private static final class Tarefa {
         final Job job;
         final int id;

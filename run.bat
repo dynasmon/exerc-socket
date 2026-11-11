@@ -1,6 +1,4 @@
 @echo off
-rem Compila e executa o programa no Windows.
-rem Uso: run.bat [balanceador | trabalhador [ip] | cliente [ip]]
 setlocal
 cd /d "%~dp0"
 chcp 65001 >nul

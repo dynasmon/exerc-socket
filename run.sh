@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Compila (se necessário) e executa o programa.
-# Uso: ./run.sh [balanceador | trabalhador [ip] | cliente [ip]]
 set -e
 cd "$(dirname "$0")"
 

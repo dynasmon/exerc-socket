@@ -1,16 +1,10 @@
 import java.util.Random;
 import java.util.stream.IntStream;
 
-/** Operações com matrizes usadas pelas três partes. */
 public final class Matrizes {
 
     private Matrizes() {}
 
-    /**
-     * C = A x B.
-     * Com paralelo = true, as linhas de C são divididas entre os núcleos da máquina
-     * (o trabalhador usa isso: paralelismo entre máquinas + dentro de cada máquina).
-     */
     public static double[][] multiplicar(final double[][] a, final double[][] b, boolean paralelo) {
         final int n = a.length;
         final int m = b.length;
@@ -35,7 +29,6 @@ public final class Matrizes {
         return c;
     }
 
-    /** Matriz com inteiros aleatórios de 0 a 9 (fácil de conferir na tela). */
     public static double[][] aleatoria(int linhas, int colunas, Random r) {
         double[][] m = new double[linhas][colunas];
         for (int i = 0; i < linhas; i++) {
@@ -68,7 +61,6 @@ public final class Matrizes {
         return m.length + "x" + (m.length == 0 ? 0 : m[0].length);
     }
 
-    /** Imprime a matriz inteira se for pequena; senão, só o canto superior esquerdo. */
     public static void imprimir(String titulo, double[][] m) {
         final int limite = 8;
         final int canto = 5;

@@ -1,11 +1,3 @@
-/**
- * Ponto de entrada único: escolhe qual papel esta máquina vai executar.
- *
- *   ./run.sh                          -> menu interativo
- *   ./run.sh balanceador              -> máquina 1
- *   ./run.sh trabalhador [ip]         -> máquinas 2, 3, 4...
- *   ./run.sh cliente [ip]             -> quem envia as matrizes
- */
 public class Main {
 
     public static void main(String[] args) {

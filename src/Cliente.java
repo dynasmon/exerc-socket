@@ -1,4 +1,3 @@
-// Cliente - qualquer máquina (ex.: a máquina 1, em outro terminal)
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -6,11 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Random;
 
-/**
- * Envia as matrizes A e B ao balanceador e recebe C = A x B.
- * Mostra como as linhas foram distribuídas entre os trabalhadores e pode
- * conferir o resultado calculando localmente (sequencial).
- */
 public class Cliente {
 
     public static void main(String[] args) {
@@ -82,7 +76,6 @@ public class Cliente {
             DataOutputStream out = Protocolo.saida(socket);
             Terminal.log("Conectado ao balanceador de carga " + balanceador + ".");
 
-            // Envia as matrizes para o balanceador
             long t0 = System.nanoTime();
             out.writeUTF(Protocolo.PAPEL_CLIENTE);
             Protocolo.escreverMatriz(out, a);
@@ -91,7 +84,6 @@ public class Cliente {
             Terminal.log("Matrizes A[" + Matrizes.dimensao(a) + "] e B[" + Matrizes.dimensao(b)
                     + "] enviadas. Aguardando o resultado...");
 
-            // Recebe o resultado da multiplicação
             byte status = in.readByte();
             if (status == Protocolo.ERRO) {
                 System.out.println("\nO balanceador recusou o pedido: " + in.readUTF());

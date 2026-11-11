@@ -19,14 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Descoberta automática do balanceador na rede local (broadcast UDP).
- *
- * O balanceador escuta a porta UDP 12346. Trabalhadores e clientes enviam um
- * pedido "PROCURA" em broadcast e o balanceador responde com a porta TCP e o
- * nome da máquina. Assim ninguém precisa digitar IP. Se a rede bloquear
- * broadcast (comum em Wi-Fi de universidade), o programa pede o IP manualmente.
- */
 public final class Descoberta {
 
     private static final String PEDIDO = "MATRIZ-SOCKET/PROCURA";
@@ -37,7 +29,6 @@ public final class Descoberta {
 
     private Descoberta() {}
 
-    /** Endereço de um balanceador (host + porta TCP). */
     public static final class Endereco {
         public final String host;
         public final int porta;
@@ -57,9 +48,6 @@ public final class Descoberta {
         }
     }
 
-    // ------------------------------------------------------------------ balanceador
-
-    /** Inicia, em segundo plano, a thread que responde aos pedidos de descoberta. */
     public static void iniciarRespondedor(final int portaTcp) {
         final String instancia = UUID.randomUUID().toString().substring(0, 8);
         final byte[] resposta = (RESPOSTA + "|" + portaTcp + "|" + instancia + "|" + nomeDestaMaquina())
@@ -87,12 +75,6 @@ public final class Descoberta {
         t.start();
     }
 
-    // ------------------------------------------------------------- trabalhador/cliente
-
-    /**
-     * Decide a qual balanceador conectar: usa o host informado na linha de comando,
-     * ou procura na rede, ou (se não achar) pergunta o IP.
-     */
     public static Endereco resolver(String informado) {
         if (informado != null && !informado.trim().isEmpty()) {
             return interpretar(informado.trim());
@@ -122,7 +104,6 @@ public final class Descoberta {
         return interpretar(Terminal.ler("IP do balanceador [localhost]: ", "localhost"));
     }
 
-    /** Aceita "host" ou "host:porta". */
     private static Endereco interpretar(String texto) {
         String host = texto;
         int porta = Protocolo.PORTA_TCP;
@@ -132,7 +113,6 @@ public final class Descoberta {
                 porta = Integer.parseInt(texto.substring(i + 1));
                 host = texto.substring(0, i);
             } catch (NumberFormatException ignorada) {
-                // não era porta; usa o texto inteiro como host
             }
         }
         return new Endereco(host, porta, null, null);
@@ -156,7 +136,6 @@ public final class Descoberta {
                         try {
                             socket.send(new DatagramPacket(pedido, pedido.length, destino, Protocolo.PORTA_DESCOBERTA));
                         } catch (IOException ignorada) {
-                            // interface sem rota: tenta as demais
                         }
                     }
                     proximoEnvio = System.currentTimeMillis() + 500;
@@ -170,13 +149,11 @@ public final class Descoberta {
                         InetAddress origem = pacote.getAddress();
                         Endereco novo = new Endereco(origem.getHostAddress(), Integer.parseInt(p[1]), p[3], p[2]);
                         Endereco anterior = porInstancia.get(novo.instancia);
-                        // O mesmo balanceador pode responder via loopback e via rede: prefere o IP da rede.
                         if (anterior == null || (anterior.host.startsWith("127.") && !origem.isLoopbackAddress())) {
                             porInstancia.put(novo.instancia, novo);
                         }
                     }
                 } catch (SocketTimeoutException | NumberFormatException ignorada) {
-                    // continua esperando respostas até o fim do prazo
                 }
             }
         } catch (IOException e) {
@@ -197,15 +174,11 @@ public final class Descoberta {
         try {
             destinos.add(InetAddress.getByName("255.255.255.255"));
         } catch (IOException ignorada) {
-            // sem broadcast global
         }
-        destinos.add(InetAddress.getLoopbackAddress()); // balanceador na mesma máquina
+        destinos.add(InetAddress.getLoopbackAddress());
         return new ArrayList<>(destinos);
     }
 
-    // ------------------------------------------------------------------ utilitários
-
-    /** IPs IPv4 desta máquina (para mostrar na tela do balanceador). */
     public static List<String> enderecosLocais() {
         List<String> lista = new ArrayList<>();
         for (NetworkInterface ni : interfacesAtivas()) {
@@ -231,14 +204,13 @@ public final class Descoberta {
                 }
             }
         } catch (SocketException ignorada) {
-            // sem interfaces de rede
         }
         return lista;
     }
 
     public static synchronized String nomeDestaMaquina() {
         if (nomeMaquina == null) {
-            String nome = System.getenv("COMPUTERNAME"); // Windows
+            String nome = System.getenv("COMPUTERNAME");
             if (nome == null || nome.isEmpty()) {
                 nome = System.getenv("HOSTNAME");
             }

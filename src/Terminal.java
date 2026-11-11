@@ -5,7 +5,6 @@ import java.io.UncheckedIOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/** Leitura do teclado e mensagens de log com horário. */
 public final class Terminal {
 
     private static final BufferedReader TECLADO = new BufferedReader(new InputStreamReader(System.in));
@@ -50,7 +49,6 @@ public final class Terminal {
                     return v;
                 }
             } catch (NumberFormatException ignorada) {
-                // cai na mensagem abaixo
             }
             System.out.println("  Valor inválido. Digite um inteiro entre " + min + " e " + max + ".");
         }
