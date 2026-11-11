@@ -7,9 +7,9 @@ Requer **Java JDK 8+** e todas as máquinas na mesma rede.
 Em cada máquina:
 
 ```bash
-git clone <url-do-repo>
+git clone https://github.com/dynasmon/exerc-socket
 cd exerc-socket
-./run.sh        # Windows: run.bat
+./run.bat
 ```
 
 Escolha no menu:
@@ -22,6 +22,6 @@ Escolha no menu:
 
 Os trabalhadores encontram o balanceador automaticamente. Para adicionar uma 4ª máquina, rode `2` Trabalhador nela.
 
-Atalhos: `./run.sh balanceador`, `./run.sh trabalhador [ip]`, `./run.sh cliente [ip]`.
+Atalhos: `./run.bat balanceador`, `./run.bat trabalhador [ip]`, `./run.bat cliente [ip]`.
 
 Se a descoberta automática falhar, informe o IP exibido pelo balanceador e libere o Java no firewall (portas TCP 12345 e UDP 12346).
